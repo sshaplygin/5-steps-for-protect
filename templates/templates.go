@@ -1,6 +1,8 @@
 package templates
 
-import "html/template"
+import (
+	"text/template"
+)
 
 var tmpl *template.Template
 

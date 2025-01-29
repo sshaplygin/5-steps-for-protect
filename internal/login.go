@@ -11,7 +11,7 @@ func (a *App) loginHandler(c echo.Context) error {
 	username := c.FormValue("username")
 	password := c.FormValue("password")
 
-	row := a.db.QueryRow("SELECT id FROM users WHERE username = ? AND password = ?", username, password)
+	row := a.db.QueryRow("SELECT id FROM users WHERE username = " + username + "AND password = " + password)
 	var userID int
 	if err := row.Scan(&userID); err != nil {
 		return c.String(http.StatusUnauthorized, "invalid credentails")
