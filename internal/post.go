@@ -20,7 +20,7 @@ func (a *App) postCreateHandler(c echo.Context) error {
 
 	val, err := c.Cookie(UD_COOKIE)
 	if err != nil {
-		a.logger.Error("create post query", zap.Error(err))
+		a.logger.Error("get user data cookie", zap.Error(err))
 
 		return c.String(http.StatusBadRequest, "Bad request")
 	}

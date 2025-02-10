@@ -47,6 +47,8 @@ func (a *App) initHandlers() {
 	e.GET("/login", a.loginPageHandler)
 	e.POST("/login", a.loginHandler)
 
+	e.GET("/logout", a.logoutHandler)
+
 	e.GET("/post", a.postPageHandler)
 	e.POST("/post", a.postCreateHandler)
 

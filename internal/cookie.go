@@ -20,3 +20,15 @@ func makeUserCookie(userID int) *http.Cookie {
 		MaxAge:   int(maxAge.Seconds()),
 	}
 }
+
+func makeExipedUserCookie(userID int) *http.Cookie {
+	return &http.Cookie{
+		Name:     UD_COOKIE, // user_data
+		Value:    strconv.Itoa(userID),
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		MaxAge:   -1,
+		Expires:  time.Unix(0, 0),
+	}
+}

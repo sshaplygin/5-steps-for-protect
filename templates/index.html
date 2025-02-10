@@ -10,9 +10,9 @@
 
 <body>
     <nav>
-        <a href="/">Home</a>
         {{if .Logged}}
         <a href="/post">Create post</a>
+        <a href="/logout">Logout</a>
         {{else}}
         <a href="/signup">Register</a>
         <a href="/login">Login</a>
