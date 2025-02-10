@@ -5,30 +5,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/styles.css">
-    <title>Bulletin Board</title>
+    <title>My post {{.id}}</title>
 </head>
 
 <body>
-    <nav>
-        <a href="/">Home</a>
-        {{if .Logged}}
-        <a href="/post">Create post</a>
-        {{else}}
-        <a href="/signup">Register</a>
-        <a href="/login">Login</a>
-        {{end}}
-    </nav>
-    <h1>News:</h1>
+    <title>My post {{.id}}</title>
+    {{if .title}}
     <ul>
-        {{range .Posts}}
         <li>
             <h2>{{.title}}</h2>
             <p>{{.content}}</p>
             <p>{{.created_at}}</pp>
-            <p>Author: {{.user_id}}</pp>
         </li>
-        {{end}}
     </ul>
+    {{else}}
+    <h2>Post not found</h2>
+    {{end}}
+    <a href="/">Back to news</a>
 </body>
 
 </html>

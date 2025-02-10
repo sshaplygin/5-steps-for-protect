@@ -15,7 +15,7 @@ func NewApp(ctx context.Context) (*App, error) {
 		return nil, err
 	}
 
-	logger, err := zap.NewProduction()
+	logger, err := zap.NewDevelopment()
 	if err != nil {
 		return nil, err
 	}
@@ -36,45 +36,12 @@ type App struct {
 	router *echo.Echo
 }
 
-func (a *App) InitTables() error {
-	_, err := a.db.Exec(`
-		CREATE SEQUENCE users_id_sequence START 1;
-
-		CREATE TABLE users (
-			id INTEGER PRIMARY KEY DEFAULT nextval('users_id_sequence'), 
-			login TEXT, 
-			password TEXT, 
-			is_admin BOOLEAN,
-		);
-	`)
-	if err != nil {
-		return err
-	}
-
-	_, err = a.db.Exec(`
-		CREATE SEQUENCE posts_id_sequence START 1;
-
-		CREATE TABLE posts (
-			id INTEGER PRIMARY KEY DEFAULT nextval('posts_id_sequence'), 
-			title TEXT, 
-			content TEXT, 
-			user_id INTEGER, 
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-		);
-	`)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (a *App) initHandlers() {
 	e := echo.New()
 
 	e.GET("/", a.indexPageHandler)
 
-	e.GET("/signup", a.indexPageHandler)
+	e.GET("/signup", a.signupPageHandler)
 	e.POST("/signup", a.signupHandler)
 
 	e.GET("/login", a.loginPageHandler)
@@ -83,7 +50,9 @@ func (a *App) initHandlers() {
 	e.GET("/post", a.postPageHandler)
 	e.POST("/post", a.postCreateHandler)
 
-	e.GET("/post/{{user_id}}/{{post_id}}", a.postPageHandler)
+	e.GET("/post/:post_id", a.getPostByIDHandler)
+
+	e.Static("/static", "static")
 
 	a.router = e
 }
@@ -97,16 +66,19 @@ func (a *App) GetLogger() *zap.Logger {
 }
 
 func (a *App) Close() error {
-	if a.logger != nil {
-		err := a.logger.Sync()
-		if err != nil {
-			// TODO:
+	defer func() {
+		if a.logger != nil {
+			err := a.logger.Sync()
+			if err != nil {
+				a.logger.Error("call logger sync", zap.Error(err))
+			}
 		}
-	}
+
+	}()
 
 	if a.db != nil {
 		if err := a.db.Close(); err != nil {
-			// TODO:
+			a.logger.Error("close db", zap.Error(err))
 		}
 	}
 

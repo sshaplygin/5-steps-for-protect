@@ -5,22 +5,40 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 )
 
 func (a *App) signupHandler(c echo.Context) error {
-	username := c.FormValue("username")
+	login := c.FormValue("username")
 	password := c.FormValue("password")
 
 	const adminLogin = "admin_login"
 
-	isAdmin := username == adminLogin
+	isAdmin := login == adminLogin
 
-	_, err := a.db.Exec("INSERT INTO users (username, password, is_admin) VALUES (?, ?, ?)", username, password, isAdmin)
-	if err != nil {
+	const query = `
+		INSERT INTO users (login, password, is_admin) 
+		VALUES (?, ?, ?) 
+		RETURNING id
+	`
+
+	row := a.db.QueryRow(query, login, password, isAdmin)
+	var userID int
+	if err := row.Scan(&userID); err != nil {
+		a.logger.Error("create new user", zap.Error(err))
+
 		return c.String(http.StatusInternalServerError, "Internal Server Error")
 	}
 
-	return c.Redirect(http.StatusSeeOther, "/login")
+	if row.Err() != nil {
+		a.logger.Error("create new user row", zap.Error(row.Err()))
+
+		return c.String(http.StatusInternalServerError, "Internal Server Error")
+	}
+
+	c.SetCookie(makeUserCookie(userID))
+
+	return c.Redirect(http.StatusSeeOther, "/")
 }
 
 func (a *App) signupPageHandler(c echo.Context) error {

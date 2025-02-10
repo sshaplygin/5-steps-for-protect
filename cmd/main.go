@@ -20,6 +20,10 @@ func main() {
 
 	log := app.GetLogger()
 
+	if err = app.InitTables(); err != nil {
+		log.Panic("init tables", zap.Error(err))
+	}
+
 	if err = app.Run(ctx); err != nil {
 		log.Panic("run app", zap.Error(err))
 	}
