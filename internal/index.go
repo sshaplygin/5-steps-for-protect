@@ -7,7 +7,7 @@ import (
 
 	"backend/templates"
 
-	"github.com/labstack/echo/v4"
+	echo "github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 )
 
@@ -56,6 +56,7 @@ func (a *App) indexPageHandler(c echo.Context) error {
 	}
 
 	val, _ := c.Cookie(UD_COOKIE)
+
 	logged := val != nil && val.Value != ""
 
 	templates.Get().ExecuteTemplate(c.Response().Writer, "index.html", pageData{logged, posts})

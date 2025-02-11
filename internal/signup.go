@@ -4,7 +4,9 @@ import (
 	"backend/templates"
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/alexedwards/argon2id"
+	echo "github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"go.uber.org/zap"
 )
 
@@ -22,7 +24,14 @@ func (a *App) signupHandler(c echo.Context) error {
 		RETURNING id
 	`
 
-	row := a.db.QueryRow(query, login, password, isAdmin)
+	hash, err := argon2id.CreateHash(password, argon2id.DefaultParams)
+	if err != nil {
+		a.logger.Error("create new hash by user password", zap.Error(err))
+
+		return c.String(http.StatusInternalServerError, "Internal Server Error")
+	}
+
+	row := a.db.QueryRow(query, login, hash, isAdmin)
 	var userID int
 	if err := row.Scan(&userID); err != nil {
 		a.logger.Error("create new user", zap.Error(err))
@@ -42,7 +51,14 @@ func (a *App) signupHandler(c echo.Context) error {
 }
 
 func (a *App) signupPageHandler(c echo.Context) error {
-	templates.Get().ExecuteTemplate(c.Response().Writer, "signup.html", nil)
+	token, ok := c.Get(middleware.DefaultCSRFConfig.ContextKey).(string)
+	if !ok {
+		return c.String(http.StatusInternalServerError, "Internal Server Error")
+	}
+
+	templates.Get().ExecuteTemplate(c.Response().Writer, "signup.html", map[string]string{
+		middleware.DefaultCSRFConfig.ContextKey: token,
+	})
 
 	return nil
 }

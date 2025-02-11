@@ -1,7 +1,7 @@
 package templates
 
 import (
-	"text/template"
+	"html/template"
 )
 
 var tmpl *template.Template

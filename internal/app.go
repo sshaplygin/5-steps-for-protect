@@ -4,7 +4,8 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/labstack/echo/v4"
+	echo "github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/marcboeker/go-duckdb"
 	"go.uber.org/zap"
 )
@@ -38,6 +39,10 @@ type App struct {
 
 func (a *App) initHandlers() {
 	e := echo.New()
+
+	e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+		TokenLookup: "form:csrf",
+	}))
 
 	e.GET("/", a.indexPageHandler)
 

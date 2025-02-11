@@ -3,9 +3,9 @@ package internal
 import (
 	"backend/templates"
 	"net/http"
-	"strings"
 
-	"github.com/labstack/echo/v4"
+	"github.com/alexedwards/argon2id"
+	echo "github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 )
 
@@ -13,14 +13,14 @@ func (a *App) loginHandler(c echo.Context) error {
 	login := c.FormValue("username")
 	password := c.FormValue("password")
 
-	var query = "SELECT id FROM users WHERE login = " +
-		"'" + strings.TrimSpace(login) + "'" +
-		" AND password = " +
-		"'" + strings.TrimSpace(password) + "'"
+	const query = "SELECT id, password FROM users WHERE login = ?"
 
-	row := a.db.QueryRow(query)
-	var userID int
-	if err := row.Scan(&userID); err != nil {
+	row := a.db.QueryRow(query, login)
+	var (
+		userID int
+		hash   string
+	)
+	if err := row.Scan(&userID, &hash); err != nil {
 		a.logger.Error("get login data", zap.Error(err))
 
 		return c.String(http.StatusUnauthorized, "invalid credentails")
@@ -30,6 +30,11 @@ func (a *App) loginHandler(c echo.Context) error {
 		a.logger.Error("get login data row", zap.Error(row.Err()))
 
 		return c.String(http.StatusInternalServerError, "Internal Server Error")
+	}
+
+	match, err := argon2id.ComparePasswordAndHash(password, hash)
+	if err != nil || !match {
+		return c.String(http.StatusForbidden, "Invalid Credentails")
 	}
 
 	c.SetCookie(makeUserCookie(userID))
